@@ -53,7 +53,7 @@ namespace ErrorHandlerMiddlewareMock
                         context.Features.Get<IExceptionHandlerPathFeature>();
                     
                     // return to client according to scope
-                    await context.Response.WriteAsync($"status:\"error\",error:\"{exceptionHandlerPathFeature?.Error.Message}\"");
+                    await context.Response.WriteAsync($"status:\"{context.Response.StatusCode.ToString()}\",error:\"{exceptionHandlerPathFeature?.Error.Message}\"");
                 });
             });
 

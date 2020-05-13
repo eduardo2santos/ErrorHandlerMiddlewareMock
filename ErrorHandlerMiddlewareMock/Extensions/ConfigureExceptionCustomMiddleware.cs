@@ -43,7 +43,7 @@ namespace ErrorHandlerMiddlewareMock
                         // fill out the Body Response properties according to scope
                         await context.Response.WriteAsync(new ExceptionDetail
                         {
-                            status = "error",
+                            status = context.Response.StatusCode.ToString(),
                             error = contextFeature.Error.Message
                         }.ToString());
                     }
