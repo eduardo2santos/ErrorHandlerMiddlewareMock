@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ErrorHandlerMiddlewareMock;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -40,9 +41,25 @@ namespace ErrorHandlerMiddlewareMock
             }
 
             /*=======================================*/
-            // Option 1: call the custom exception handler method
+            // Option 1: call the UseExceptionHandler with custom return
+            app.UseExceptionHandler(errorApp =>
+            {
+                errorApp.Run(async context =>
+                {
+                    context.Response.ContentType = "application/json";
+                    
+                    // Use exceptionHandlerPathFeature to get the type of error into the exception
+                    var exceptionHandlerPathFeature =
+                        context.Features.Get<IExceptionHandlerPathFeature>();
+                    
+                    // return to client according to scope
+                    await context.Response.WriteAsync($"status:\"error\",error:\"{exceptionHandlerPathFeature?.Error.Message}\"");
+                });
+            });
+
+            //// Option 2: call the custom exception handler method
             app.ConfigureExceptionCustomHandler();
-            // Option 2: call the custom exception handler method injected
+            //// Option 3: call the custom exception handler method injected
             app.ConfigureExceptionCustomHandler2();
             /*=======================================*/
             
