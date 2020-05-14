@@ -43,14 +43,15 @@ namespace ErrorHandlerMiddlewareMock
 
             /*=================================================================================*/
             // Option 0: treat any error occurring outside the app, for ex. calling not exists page
-            app.Use(async (ctx, next) =>
+            app.Use(async (context, next) =>
             {
                 await next();
 
                 // check the response Statuscode is different from 2xx nor 3xx range 
-                if ((!ctx.Response.StatusCode.ToString().StartsWith("2") && !ctx.Response.StatusCode.ToString().StartsWith("3")) && !ctx.Response.HasStarted)
+                if ((!context.Response.StatusCode.ToString().StartsWith("2") && !context.Response.StatusCode.ToString().StartsWith("3")) && !context.Response.HasStarted)
                 {
-                    await ctx.Response.WriteAsync("{" + $"status:\"{ctx.Response.StatusCode.ToString()}\",error:\"{Enum.GetName(typeof(HttpStatusCode), ctx.Response.StatusCode)}\"" +"}");
+                    context.Response.ContentType = "application/json";
+                    await context.Response.WriteAsync("{" + $"status:\"{context.Response.StatusCode.ToString()}\",error:\"{Enum.GetName(typeof(HttpStatusCode), context.Response.StatusCode)}\"" +"}");
                     await next();
                 }
             });
