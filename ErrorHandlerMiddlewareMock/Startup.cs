@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using ErrorHandlerMiddlewareMock;
 using Microsoft.AspNetCore.Builder;
@@ -40,7 +41,20 @@ namespace ErrorHandlerMiddlewareMock
                 app.UseDeveloperExceptionPage();
             }
 
-            /*=======================================*/
+            /*=================================================================================*/
+            // Option 0: treat any error occurring outside the app, for ex. calling not exists page
+            app.Use(async (ctx, next) =>
+            {
+                await next();
+
+                // check the response Statuscode is different from 2xx nor 3xx range 
+                if ((!ctx.Response.StatusCode.ToString().StartsWith("2") && !ctx.Response.StatusCode.ToString().StartsWith("3")) && !ctx.Response.HasStarted)
+                {
+                    await ctx.Response.WriteAsync("{" + $"status:\"{ctx.Response.StatusCode.ToString()}\",error:\"{Enum.GetName(typeof(HttpStatusCode), ctx.Response.StatusCode)}\"" +"}");
+                    await next();
+                }
+            });
+
             // Option 1: call the UseExceptionHandler with custom return
             app.UseExceptionHandler(errorApp =>
             {
@@ -53,15 +67,15 @@ namespace ErrorHandlerMiddlewareMock
                         context.Features.Get<IExceptionHandlerPathFeature>();
                     
                     // return to client according to scope
-                    await context.Response.WriteAsync($"status:\"{context.Response.StatusCode.ToString()}\",error:\"{exceptionHandlerPathFeature?.Error.Message}\"");
+                    await context.Response.WriteAsync("{" + $"status:\"{context.Response.StatusCode.ToString()}\",error:\"{exceptionHandlerPathFeature?.Error.Message}\"" + "}");
                 });
             });
 
             //// Option 2: call the custom exception handler method
-            app.ConfigureExceptionCustomHandler();
+            //app.ConfigureExceptionCustomHandler();
             //// Option 3: call the custom exception handler method injected
-            app.ConfigureExceptionCustomHandler2();
-            /*=======================================*/
+            //app.ConfigureExceptionCustomHandler2();
+            /*========================================================================================*/
             
             app.UseHttpsRedirection();
 
